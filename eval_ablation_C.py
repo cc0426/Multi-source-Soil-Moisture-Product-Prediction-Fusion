@@ -2,9 +2,8 @@ import numpy as np
 import torch
 import pandas as pd
 from config import DataConfig, TrainingConfig, ModelConfig, PRODUCT_CONFIGS
-from model import ConsensusModel_SingleTask  # 导入变体A模型
+from model import ConsensusModel_SingleTask 
 
-# -------------------- 数据加载函数（同基线） --------------------
 def get_data(data_config):
     lon = np.load('./dataset/forcing_lon.npy')
     lat = np.load('./dataset/forcing_lat.npy')
@@ -45,7 +44,7 @@ def get_data(data_config):
     for i, key in enumerate(['clay_05cm', 'sand_05cm', 'silt_05cm', 'DEM', 'landcover']):
         static_tensor[:, :, i] = (static_variables[:, :, i] - static_means[key]) / (static_stds[key] - static_means[key])
 
-    print('数据加载与归一化完成')
+
     return dynamic_tensor, static_tensor, product_data
 
 def prepare_samples_for_point(dynamic_series, static_vec):
@@ -79,8 +78,7 @@ def main():
 
     # 对每个产品单独预测
     for target in products:
-        print(f"\n========== 预测产品 {target} (单任务模型) ==========")
-        # 加载对应产品的单任务模型
+
         model = ConsensusModel_SingleTask(
             config=training_config,
             pretrained_paths=pretrained_paths,
@@ -95,13 +93,13 @@ def main():
         model = model.to(device)
         model.eval()
 
-        # 初始化预测和观测数组
+
         predictions = np.full((n_samples, lat_len, lon_len, 7), np.nan, dtype=np.float32)
         observations = np.full((n_samples, lat_len, lon_len, 7), np.nan, dtype=np.float32)
 
-        # 逐网格点预测
+
         for i in range(lat_len):
-            print(f"  处理纬度 {i+1}/{lat_len}")
+
             for j in range(lon_len):
                 dyn_series = dynamic_tensor[:, i, j, :]
                 static_vec = static_tensor[i, j, :]
@@ -113,7 +111,7 @@ def main():
                 static_t = torch.from_numpy(static).float().to(device)
 
                 with torch.no_grad():
-                    pred, _ = model(x_t, static_t)  # 单任务模型返回 (pred, feat)
+                    pred, _ = model(x_t, static_t) 
 
                 predictions[:n_pts, i, j, :] = pred.cpu().numpy()
                 prod_series = product_data[target][:, i, j]
@@ -123,9 +121,7 @@ def main():
         # 保存结果
         np.save(f'./eval_data/pred_ablationC_{target}.npy', predictions)
         np.save(f'./eval_data/obs_ablationC_{target}.npy', observations)
-        print(f"{target} 预测结果已保存到 ./eval_data/pred_ablationC_{target}.npy")
 
-    print("\n所有预测完成！")
 
 if __name__ == "__main__":
     main()
