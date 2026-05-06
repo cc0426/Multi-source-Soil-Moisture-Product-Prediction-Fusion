@@ -8,13 +8,12 @@ from datetime import datetime
 from pathlib import Path
 import wandb
 from tqdm import tqdm
-from model import ConsensusModel_Scratch      # 导入变体D模型
+from model import ConsensusModel_Scratch    
 from config import ModelConfig, TrainingConfig, DataConfig
 from data_loader import create_data_loaders
 from loss import NaNMSELoss
 
 class Stage2Trainer:
-    # 完全复用原训练器，不做修改
     def __init__(self, model, config, product_names):
         self.model = model
         self.config = config
@@ -33,11 +32,9 @@ class Stage2Trainer:
         self.best_val_loss = float('inf')
         self.patience_counter = 0
 
-        # 保存目录：使用 config.save_dir 为基础，但内部会加上 '/stage2'，所以我们在 main 中设置 save_dir 为不同路径
         self.save_dir = Path(config.save_dir) / 'stage2'
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"阶段二训练器初始化完成，可训练参数: {sum(p.numel() for p in trainable_params):,}")
 
     def _create_optimizer(self, params):
         if self.config.optimizer_type == 'adam':
@@ -148,7 +145,7 @@ class Stage2Trainer:
         if is_best:
             best_path = self.save_dir / 'stage2_best_model.pth'
             torch.save(checkpoint, best_path)
-        print(f"检查点已保存: {checkpoint_path}")
+
 
     def load_checkpoint(self, checkpoint_path):
         checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
@@ -158,13 +155,10 @@ class Stage2Trainer:
         self.train_history = checkpoint.get('train_history', self.train_history)
         self.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         self.patience_counter = checkpoint.get('patience_counter', 0)
-        print(f"从 epoch {checkpoint['epoch']} 恢复训练")
+
         return checkpoint['epoch']
 
     def train(self, train_loader, val_loader):
-        print("="*60)
-        print("开始训练阶段二共识模型 (变体D: 无两阶段训练（从零训练）)")
-        print("="*60)
 
         if self.config.use_wandb:
             wandb.init(
@@ -195,21 +189,21 @@ class Stage2Trainer:
                 self.best_val_loss = val_loss
                 self.patience_counter = 0
                 is_best = True
-                print("✨ 新的最佳模型！")
+                print("new best model")
             else:
                 self.patience_counter += 1
                 is_best = False
-                print(f"早停计数器: {self.patience_counter}/{early_stop_patience}")
+                print(f"early stop: {self.patience_counter}/{early_stop_patience}")
 
-            print(f"  训练损失: {train_loss:.6f}")
-            print(f"  验证损失: {val_loss:.6f}")
-            print(f"  学习率: {self.optimizer.param_groups[0]['lr']:.6f}")
+            print(f"  train loss: {train_loss:.6f}")
+            print(f"  val loss: {val_loss:.6f}")
+            print(f"  lr: {self.optimizer.param_groups[0]['lr']:.6f}")
 
             if (epoch+1) % self.config.save_interval == 0 or is_best:
                 self.save_checkpoint(epoch, train_loss, val_loss, is_best)
 
             if self.patience_counter >= early_stop_patience:
-                print(f"早停触发，结束训练")
+
                 break
 
             if self.config.use_wandb:
@@ -228,8 +222,8 @@ class Stage2Trainer:
             'train_history': self.train_history,
             'best_val_loss': self.best_val_loss
         }, final_path)
-        print(f"最终模型保存到: {final_path}")
-        print(f"最佳验证损失: {self.best_val_loss:.6f}")
+        print(f"best model saved: {final_path}")
+        print(f"best val loss: {self.best_val_loss:.6f}")
 
         if self.config.use_wandb:
             wandb.finish()
@@ -238,29 +232,23 @@ class Stage2Trainer:
 
 
 def main():
-    # 配置
+
     model_config = ModelConfig()
     training_config = TrainingConfig()
     data_config = DataConfig()
     device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
     training_config.device = device
-    print(f"使用设备: {device}")
 
-    # 设置保存路径为 ablation_D
     training_config.save_dir = './checkpoints/stage2_ablation_D'
 
-    # 数据加载器
-    print("加载数据集...")
     train_loader, val_loader, test_loader, norm_params = create_data_loaders(
         data_config,
         training_config=training_config,
         grid_mask_path='./dataset/mask_Northeast_China.npy',
         normalize=True
     )
-    print(f"训练集: {len(train_loader.dataset)} 样本")
-    print(f"验证集: {len(val_loader.dataset)} 样本")
 
-    # 预训练模型的路径
+
     pretrained_paths = {
         'era5': './checkpoints/stage1/era5/stage1_best_model.pth',
         'colm': './checkpoints/stage1/colm/stage1_best_model.pth',
@@ -269,9 +257,9 @@ def main():
 
     for name, path in pretrained_paths.items():
         if not os.path.exists(path):
-            raise FileNotFoundError(f"预训练模型 {name} 未找到: {path}")
+            raise FileNotFoundError(f"model {name} not found: {path}")
 
-    # 创建模型时不需要 pretrained_paths
+
     consensus_model = ConsensusModel_Scratch(
         config=training_config,
         feature_dim=128,
@@ -279,16 +267,15 @@ def main():
         num_heads=4
     )
 
-    # 训练器
+
     trainer = Stage2Trainer(
         model=consensus_model,
         config=training_config,
         product_names=['era5', 'colm', 'smci']
     )
 
-    # 开始训练
     best_val_loss = trainer.train(train_loader, val_loader)
-    print(f"阶段二训练完成，最佳验证损失: {best_val_loss:.6f}")
+
 
 
 if __name__ == "__main__":
@@ -303,8 +290,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n训练中断")
+        print("\n train break")
     except Exception as e:
-        print(f"\n错误: {e}")
+        print(f"\n error: {e}")
         import traceback
         traceback.print_exc()
