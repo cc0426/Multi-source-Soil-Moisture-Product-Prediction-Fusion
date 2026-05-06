@@ -16,14 +16,14 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['axes.unicode_minus'] = False
 # Set default font for better compatibility
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['font.size'] = 22  # 设置全局字号
-# plt.rcParams['axes.labelsize'] = 22  # 坐标轴标签字号
-# plt.rcParams['axes.titlesize'] = 22  # 子图标题字号
-# plt.rcParams['xtick.labelsize'] = 18  # X轴刻度字号（可稍小）
-# plt.rcParams['ytick.labelsize'] = 18  # Y轴刻度字号（可稍小）
-# plt.rcParams['legend.fontsize'] = 18  # 图例字号
-# plt.rcParams['figure.titlesize'] = 24  # 总标题字号（可稍大）
-# plt.rcParams['colorbar.label.size'] = 20  # colorbar标签字号
+plt.rcParams['font.size'] = 22  
+# plt.rcParams['axes.labelsize'] = 22  
+# plt.rcParams['axes.titlesize'] = 22 
+# plt.rcParams['xtick.labelsize'] = 18
+# plt.rcParams['ytick.labelsize'] = 18
+# plt.rcParams['legend.fontsize'] = 18
+# plt.rcParams['figure.titlesize'] = 24
+# plt.rcParams['colorbar.label.size'] = 20
 # plt.rcParams['axes.unicode_minus'] = False
 PRODUCTS = ['ERA5', 'CoLM', 'SMCI']
 NUM_HEADS = 4
@@ -213,7 +213,7 @@ class AttentionAnalyzer:
             ax.set_ylabel('Latitude (°N)')
             ax.grid(True, alpha=0.3, linestyle='--')
             cbar = plt.colorbar(im, ax=ax, label='Attention Weight')
-            cbar.ax.tick_params(labelsize=16)  # colorbar刻度字号
+            cbar.ax.tick_params(labelsize=16)  
 
         plt.tight_layout()
         plt.savefig(f'{self.data_dir}/spatial_self_attention_masked.png', dpi=150, bbox_inches='tight')
@@ -385,7 +385,7 @@ class AttentionAnalyzer:
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
         fig.suptitle('Average Attention Pattern per Head (Northeast China)', fontsize=22)
         plt.rcParams['font.family'] = 'Times New Roman'
-        plt.rcParams['font.size'] = 22  # 设置全局字号
+        plt.rcParams['font.size'] = 22 
         for head in range(NUM_HEADS):
             ax = axes[head//2, head%2]
             im = ax.imshow(mean_overall[head], cmap='BuPu', vmin=0, vmax=0.6)
