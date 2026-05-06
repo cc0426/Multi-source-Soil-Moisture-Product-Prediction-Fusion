@@ -1,5 +1,5 @@
 """
-analyze_attention_results_fixed.py (最终修复版 - English labels)
+analyze_attention_results_fixed.py
 """
 
 import numpy as np
@@ -158,14 +158,13 @@ class AttentionAnalyzer:
                 self_attn[..., head] += self.mean_attn_masked[..., head, i, i]
             self_attn[..., head] /= 3
 
-        # ========== 修改部分：统一颜色范围 ==========
-        # 收集所有head的有效数据
+       
         all_data = []
         for head in range(NUM_HEADS):
             data = self_attn[..., head]
             all_data.append(data[~np.isnan(data)])
 
-        # 计算全局颜色范围（使用2%和98%分位数避免极端值影响）
+        
         if len(np.concatenate(all_data)) > 0:
             global_vmin = np.percentile(np.concatenate(all_data), 2)
             global_vmax = np.percentile(np.concatenate(all_data), 98)
@@ -183,25 +182,24 @@ class AttentionAnalyzer:
             ax = axes[head // 2, head % 2]
             data = self_attn[..., head]
 
-            # 使用统一的vmin和vmax
+            
             im = ax.imshow(data, cmap='RdYlBu_r',
                            vmin=global_vmin, vmax=global_vmax)
             ax.set_title(f'Head {head} - Mean Self-Attention')
             ax.set_xlabel('Longitude')
             ax.set_ylabel('Latitude')
 
-            # 添加colorbar时使用统一的范围
+            
             plt.colorbar(im, ax=ax, label='Attention Weight')
 
         plt.tight_layout()
         plt.savefig(f'{self.data_dir}/spatial_self_attention_masked.png', dpi=150, bbox_inches='tight')
         plt.show()
 
-        # ========== 可选：添加一个额外的统计图展示各头的数值分布 ==========
-        # 绘制各头自注意力值的分布对比图
+        
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        # 收集各头的数据用于箱线图
+        
         head_data = []
         head_names = []
         for head in range(NUM_HEADS):
@@ -214,7 +212,7 @@ class AttentionAnalyzer:
         if head_data:
             bp = ax.boxplot(head_data, labels=head_names, patch_artist=True, showmeans=True)
 
-            # 设置箱线图颜色
+           
             colors = ['lightcoral', 'lightblue', 'lightgreen', 'lightyellow']
             for patch, color in zip(bp['boxes'], colors[:len(head_data)]):
                 patch.set_facecolor(color)
@@ -223,7 +221,6 @@ class AttentionAnalyzer:
             ax.set_title('Distribution of Self-Attention Weights by Head')
             ax.grid(True, alpha=0.3)
 
-            # 添加统一颜色范围的参考线
             ax.axhline(y=global_vmin, color='red', linestyle='--', alpha=0.5, label=f'Global vmin ({global_vmin:.3f})')
             ax.axhline(y=global_vmax, color='red', linestyle='--', alpha=0.5, label=f'Global vmax ({global_vmax:.3f})')
             ax.legend()
@@ -232,17 +229,10 @@ class AttentionAnalyzer:
             plt.savefig(f'{self.data_dir}/self_attention_distribution_comparison.png', dpi=150, bbox_inches='tight')
             plt.show()
 
-            # 打印统计信息
-            print("\n各头自注意力统计:")
-            for head in range(NUM_HEADS):
-                data = self_attn[..., head]
-                valid_data = data[~np.isnan(data)]
-                if len(valid_data) > 0:
-                    print(f"  Head {head}: 均值={np.mean(valid_data):.4f}, "
-                          f"范围=[{np.min(valid_data):.4f}, {np.max(valid_data):.4f}], "
-                          f"标准差={np.std(valid_data):.4f}")
 
-        # Error spatial distribution (保持原有代码不变)
+
+
+
         fig, axes = plt.subplots(1, 3, figsize=(18, 5))
         fig.suptitle('Prediction Error Spatial Distribution (Day 1, Northeast China)', fontsize=16)
 
@@ -265,7 +255,7 @@ class AttentionAnalyzer:
         plt.savefig(f'{self.data_dir}/spatial_errors_masked.png', dpi=150, bbox_inches='tight')
         plt.show()
 
-        # Error difference map (保持原有代码不变)
+
         if not np.all(np.isnan(self.error_era5_masked)) and not np.all(np.isnan(self.error_colm_masked)):
             fig, ax = plt.subplots(figsize=(10, 8))
             diff_era5_colm = self.error_era5_masked - self.error_colm_masked
