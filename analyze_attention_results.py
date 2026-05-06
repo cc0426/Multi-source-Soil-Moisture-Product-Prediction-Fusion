@@ -1,5 +1,5 @@
 """
-analyze_attention_results_fixed.py (最终修复版 - English labels with correct coordinates)
+analyze_attention_results_fixed.py
 """
 
 import numpy as np
