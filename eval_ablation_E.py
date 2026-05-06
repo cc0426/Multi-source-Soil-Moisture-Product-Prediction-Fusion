@@ -117,7 +117,7 @@ def main():
     for prod in products:
         np.save(f'./eval_data/pred_ablationE_{prod}.npy', predictions[prod])
         np.save(f'./eval_data/obs_ablationE_{prod}.npy', observations[prod])
-        print(f"{prod} 预测结果已保存到 ./eval_data/pred_ablationA_{prod}.npy")
+
 
 
 if __name__ == "__main__":
