@@ -2,9 +2,8 @@ import numpy as np
 import torch
 import pandas as pd
 from config import DataConfig, TrainingConfig, ModelConfig, PRODUCT_CONFIGS
-from model import ConsensusModel_ConcatFusion    # 导入变体B模型
+from model import ConsensusModel_ConcatFusion  
 
-# -------------------- 数据加载函数（同基线） --------------------
 def get_data(data_config):
     lon = np.load('./dataset/forcing_lon.npy')
     lat = np.load('./dataset/forcing_lat.npy')
@@ -45,7 +44,7 @@ def get_data(data_config):
     for i, key in enumerate(['clay_05cm', 'sand_05cm', 'silt_05cm', 'DEM', 'landcover']):
         static_tensor[:, :, i] = (static_variables[:, :, i] - static_means[key]) / (static_stds[key] - static_means[key])
 
-    print('数据加载与归一化完成')
+
     return dynamic_tensor, static_tensor, product_data
 
 def prepare_samples_for_point(dynamic_series, static_vec):
