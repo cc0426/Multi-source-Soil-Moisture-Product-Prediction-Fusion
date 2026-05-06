@@ -172,7 +172,7 @@ class AttentionAnalyzer:
             global_vmin = 0.3
             global_vmax = 0.37
 
-        print(f"统一颜色范围: vmin={global_vmin:.4f}, vmax={global_vmax:.4f}")
+
 
         # Self-attention spatial distribution with unified colorbar
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
