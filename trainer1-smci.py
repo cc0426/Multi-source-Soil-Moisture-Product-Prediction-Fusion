@@ -329,7 +329,7 @@ def main():
         normalize=True
     )
 
-    product_names = ['era5']
+    product_names = ['smci']
     best_val_losses = {}
 
     for product in product_names:
