@@ -298,8 +298,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n训练中断")
+        print("\n train break")
     except Exception as e:
-        print(f"\n错误: {e}")
+        print(f"\n error: {e}")
         import traceback
         traceback.print_exc()
