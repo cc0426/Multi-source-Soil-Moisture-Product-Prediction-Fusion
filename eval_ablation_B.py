@@ -70,8 +70,7 @@ def main():
 
     products = ['era5', 'smci', 'colm']
 
-    # 加载变体A模型
-    print("\n========== 加载变体B模型（拼接融合） ==========")
+
     pretrained_paths = {
         'era5': './checkpoints/stage1/era5/stage1_best_model.pth',
         'colm': './checkpoints/stage1/colm/stage1_best_model.pth',
@@ -88,15 +87,12 @@ def main():
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()
-    print("模型加载完成")
 
-    # 初始化预测和观测数组
     predictions = {prod: np.full((n_samples, lat_len, lon_len, 7), np.nan, dtype=np.float32) for prod in products}
     observations = {prod: np.full((n_samples, lat_len, lon_len, 7), np.nan, dtype=np.float32) for prod in products}
 
-    # 逐网格点预测
     for i in range(lat_len):
-        print(f"  处理纬度 {i+1}/{lat_len}")
+
         for j in range(lon_len):
             dyn_series = dynamic_tensor[:, i, j, :]
             static_vec = static_tensor[i, j, :]
@@ -108,7 +104,7 @@ def main():
             static_t = torch.from_numpy(static).float().to(device)
 
             with torch.no_grad():
-                preds_dict, _ = model(x_t, static_t)  # 返回字典
+                preds_dict, _ = model(x_t, static_t) 
 
             for prod in products:
                 pred = preds_dict[prod].cpu().numpy()
@@ -117,13 +113,12 @@ def main():
                 for k in range(n_pts):
                     observations[prod][k, i, j, :] = prod_series[k:k+7]
 
-    # 保存结果
     for prod in products:
         np.save(f'./eval_data/pred_ablationB_{prod}.npy', predictions[prod])
         np.save(f'./eval_data/obs_ablationB_{prod}.npy', observations[prod])
-        print(f"{prod} 预测结果已保存到 ./eval_data/pred_ablationB_{prod}.npy")
 
-    print("\n所有预测完成！")
+
+
 
 if __name__ == "__main__":
     main()
